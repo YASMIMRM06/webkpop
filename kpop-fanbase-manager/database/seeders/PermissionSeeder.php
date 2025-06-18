@@ -1,23 +1,20 @@
-<?php
-
-namespace Database\Seeders;
-
-use App\Models\Permission;
-use Illuminate\Database\Seeder;
-
-class PermissionSeeder extends Seeder
-{
-    public function run()
-    {
-        $permissions = [
-            ['name' => 'Manage Users', 'slug' => 'manage-users', 'description' => 'Can create, edit, and delete users'],
-            ['name' => 'Manage Groups', 'slug' => 'manage-groups', 'description' => 'Can create, edit, and delete groups'],
-            ['name' => 'Manage Events', 'slug' => 'manage-events', 'description' => 'Can create, edit, and delete events'],
-            ['name' => 'Manage Permissions', 'slug' => 'manage-permissions', 'description' => 'Can assign permissions to users'],
-        ];
-
-        foreach ($permissions as $permission) {
-            Permission::create($permission);
-        }
-    }
-}
+<?php 
+namespace Database\Seeders; 
+use App\Models\Permission; 
+use Illuminate\Database\Seeder; 
+class PermissionSeeder extends Seeder 
+{ 
+    public function run() 
+    { 
+        $permissions = [ 
+            ['name' => 'Gerenciar Usuários', 'slug' => 'manage-users', 'description' => 'Pode criar, editar e deletar usuários'], 
+            ['name' => 'Gerenciar Grupos', 'slug' => 'manage-groups', 'description' => 'Pode criar, editar e deletar grupos'], 
+            ['name' => 'Gerenciar Eventos', 'slug' => 'manage-events', 'description' => 'Pode criar, editar e deletar eventos'], 
+            ['name' => 'Gerenciar Permissões', 'slug' => 'manage-permissions', 'description' => 'Pode atribuir permissões a 
+usuários'], 
+        ]; 
+        foreach ($permissions as $permission) { 
+            Permission::create($permission); 
+        } 
+    } 
+} 
