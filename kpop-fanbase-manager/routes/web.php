@@ -1,67 +1,45 @@
-<?php 
-use Illuminate\Support\Facades\Route; 
-use App\Http\Controllers\AuthController; 
-use App\Http\Controllers\UserController; 
-use App\Http\Controllers\GroupController; 
-use App\Http\Controllers\MusicController; 
-use App\Http\Controllers\EventController; 
-use App\Http\Controllers\RatingController; 
-use App\Http\Controllers\PermissionController; 
-use Illuminate\Foundation\Auth\EmailVerificationRequest; 
-// Rotas de Autenticação 
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login'); 
-Route::post('/login', [AuthController::class, 'login']); 
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout'); 
-// Rotas de Registro 
-Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register'); 
-Route::post('/register', [AuthController::class, 'register']); 
-// Rotas de Redefinição de Senha 
-Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request'); 
-Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email'); 
-Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset'); 
-Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update'); 
-// Rotas de Verificação de Email 
-Route::get('/email/verify', function () { 
-    return view('auth.verify-email'); 
-})->middleware('auth')->name('verification.notice'); 
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) { 
-    $request->fulfill(); 
-    return redirect('/'); 
-})->middleware(['auth', 'signed'])->name('verification.verify'); 
-Route::post('/email/verification-notification', function (Request $request) { 
-    $request->user()->sendEmailVerificationNotification(); 
-    return back()->with('message', 'Link de verificação enviado!'); 
-})->middleware(['auth', 'throttle:6,1'])->name('verification.send'); 
-// Rotas Autenticadas 
-Route::middleware(['auth', 'verified'])->group(function () { 
-    // Dashboard 
-    Route::get('/', function () { 
-        return view('dashboard'); 
-    })->name('dashboard'); 
-    // Perfil do Usuário 
-    Route::get('/profile', [UserController::class, 'editProfile'])->name('users.profile'); 
-    Route::put('/profile', [UserController::class, 'updateProfile'])->name('users.profile.update'); 
-    // Recursos de Usuário 
-    Route::resource('users', UserController::class)->except(['create', 'store'])->middleware('admin'); 
-    // Recursos de Grupo 
-    Route::resource('groups', GroupController::class); 
-    // Recursos de Música do Grupo 
-    Route::prefix('groups/{group}')->group(function () { 
-        Route::resource('musics', MusicController::class)->shallow(); 
-    }); 
-    // Recursos de Evento 
-    Route::resource('events', EventController::class); 
-    Route::post('events/{event}/participate', [EventController::class, 'participate'])->name('events.participate'); 
-    Route::post('events/{event}/cancel', [EventController::class, 'cancelParticipation'])->name('events.cancel'); 
-    // Recursos de Avaliação 
-    Route::post('musics/{music}/ratings', [RatingController::class, 'store'])->name('ratings.store'); 
-    Route::put('ratings/{rating}', [RatingController::class, 'update'])->name('ratings.update'); 
-    Route::delete('ratings/{rating}', [RatingController::class, 'destroy'])->name('ratings.destroy'); 
-    // Recursos de Permissão (apenas admin) 
-    Route::middleware('admin')->group(function () { 
-        Route::resource('permissions', PermissionController::class); 
-        Route::get('users/{user}/permissions', [PermissionController::class, 'userPermissions'])->name('users.permissions'); 
-        Route::put('users/{user}/permissions', [PermissionController::class, 
-'updateUserPermissions'])->name('users.permissions.update'); 
-    }); 
+<?php
+
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MusicController; // Exemplo do seu controller
+use App\Http\Controllers\AdminController; // Exemplo de um controller para admin
+use Illuminate\Support\Facades\Route;
+
+// Rota inicial do projeto
+Route::get('/', function () {
+    return view('welcome');
 });
+
+// Rota do Dashboard padrão (para usuários comuns)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    // Suas rotas para perfis de usuário
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Exemplos de rotas para funcionalidades de usuário comum (ex: Avaliações, Participação em Eventos)
+    Route::get('/minhas-avaliacoes', [AvaliacaoController::class, 'index'])->name('avaliacoes.index');
+    // ...
+});
+
+// Rotas para funcionalidades de ADMINISTRAÇÃO
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/users', [AdminController::class, 'usersIndex'])->name('admin.users.index');
+    // ... adicione outras rotas de administração aqui (gerenciamento de grupos, eventos, etc.)
+
+    // Exemplo de rotas para gerenciamento de músicas (CRUD completo)
+    Route::resource('musicas', MusicController::class)->except(['index', 'show']); // Exceto index e show, que podem ser públicas
+});
+
+// Rotas públicas (ou para todos os usuários logados, não apenas admin)
+Route::get('/musicas', [MusicController::class, 'index'])->name('musicas.index');
+Route::get('/musicas/{music}', [MusicController::class, 'show'])->name('musicas.show');
+
+
+// Rotas de autenticação do Breeze
+require __DIR__.'/auth.php';
